@@ -93,6 +93,7 @@ func main() {
 			port = serverPort
 		}
 		flags.Server = ":" + port
+		flags.Cipher = "AEAD_AES_128_GCM"
 		fmt.Println("Listen: ", flags.Server, "password", flags.Password)
 	}
 
