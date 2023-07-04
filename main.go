@@ -88,14 +88,13 @@ func main() {
 		}
 
 		serverPort := strconv.Itoa((int)(params["server_port"].(float64)))
-		serverPwd := params["password"].(string)
+		flags.Password = params["password"].(string)
 
 		if len(port) == 0 {
 			port = serverPort
 		}
-
-		flags.Server = fmt.Sprintf("ss://AEAD_AES_128_GCM:%s@:%s", serverPwd, port)
-		fmt.Println("connect url: ", flags.Server)
+		flags.Server = ":" + port
+		fmt.Println("Listen: ", flags.Server, "password", flags.Password)
 	}
 
 	if flags.Keygen > 0 {
