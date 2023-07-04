@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -86,7 +87,7 @@ func main() {
 			panic(err)
 		}
 
-		serverPort := params["server_port"].(string)
+		serverPort := strconv.Itoa((int)(params["server_port"].(float64)))
 		serverPwd := params["password"].(string)
 
 		if len(port) == 0 {
