@@ -3,9 +3,11 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -45,13 +47,17 @@ func main() {
 		PluginOpts string
 	}
 
+	var configFile string
+	var port string
+
 	flag.BoolVar(&config.Verbose, "verbose", false, "verbose mode")
 	flag.StringVar(&flags.Cipher, "cipher", "AEAD_CHACHA20_POLY1305", "available ciphers: "+strings.Join(core.ListCipher(), " "))
 	flag.StringVar(&flags.Key, "key", "", "base64url-encoded key (derive from password if empty)")
 	flag.IntVar(&flags.Keygen, "keygen", 0, "generate a base64url-encoded random key of given length in byte")
 	flag.StringVar(&flags.Password, "password", "", "password")
 	flag.StringVar(&flags.Server, "s", "", "server listen address or url")
-	flag.StringVar(&flags.Client, "c", "", "client connect address or url")
+	flag.StringVar(&configFile, "c", "", "config file")
+	flag.StringVar(&port, "p", "", "port file, default in config file (server_port)")
 	flag.StringVar(&flags.Socks, "socks", "", "(client-only) SOCKS listen address")
 	flag.BoolVar(&flags.UDPSocks, "u", false, "(client-only) Enable UDP support for SOCKS")
 	flag.StringVar(&flags.RedirTCP, "redir", "", "(client-only) redirect TCP from this address")
@@ -65,6 +71,31 @@ func main() {
 	flag.BoolVar(&config.TCPCork, "tcpcork", false, "coalesce writing first few packets")
 	flag.DurationVar(&config.UDPTimeout, "udptimeout", 5*time.Minute, "UDP tunnel timeout")
 	flag.Parse()
+
+	if len(configFile) > 0 {
+		f, err := os.Open(configFile)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		b, _ := ioutil.ReadAll(f)
+		var params map[string]interface{}
+		err = json.Unmarshal(b, &params)
+		if err != nil {
+			panic(err)
+		}
+
+		serverPort := params["server_port"].(string)
+		serverPwd := params["password"].(string)
+
+		if len(port) == 0 {
+			port = serverPort
+		}
+
+		flags.Server = fmt.Sprintf("ss://AEAD_AES_128_GCM:%s@:%s", serverPwd, port)
+		fmt.Println("connect url: ", flags.Server)
+	}
 
 	if flags.Keygen > 0 {
 		key := make([]byte, flags.Keygen)
