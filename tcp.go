@@ -19,6 +19,7 @@ var dnsDialer = net.Dialer{
 }
 
 var dialer = &net.Dialer{
+	Timeout: time.Second * 2,
 	Resolver: &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
