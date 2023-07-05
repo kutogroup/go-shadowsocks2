@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -127,7 +128,23 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 				return
 			}
 
-			rc, err := net.Dial("tcp", tgt.String())
+			dialer := &net.Dialer{
+				Timeout: 10 * time.Second,
+				Resolver: &net.Resolver{
+					PreferGo: true,
+					Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+						d := net.Dialer{
+							Timeout: time.Duration(2000) * time.Millisecond,
+						}
+
+						dnsTable := []string{"1.1.1.1", "1.0.0.1", "8.8.8.8", "8.8.4.4"}
+						dns := dnsTable[time.Now().Unix()%4]
+						return d.DialContext(ctx, dns, "tcp")
+					},
+				},
+			}
+
+			rc, err := dialer.Dial("tcp", tgt.String())
 			if err != nil {
 				logf("failed to connect to target: %v", err)
 				return
