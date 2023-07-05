@@ -14,6 +14,22 @@ import (
 	"github.com/shadowsocks/go-shadowsocks2/socks"
 )
 
+var tcpDialer = &net.Dialer{
+	Timeout: 10 * time.Second,
+	Resolver: &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout: time.Duration(2000) * time.Millisecond,
+			}
+
+			dnsTable := []string{"1.1.1.1:53", "1.0.0.1:53", "8.8.8.8:53", "8.8.4.4:53"}
+			dns := dnsTable[time.Now().Unix()%4]
+			return d.DialContext(ctx, "tcp", dns)
+		},
+	},
+}
+
 // Create a SOCKS server listening on addr and proxy to server.
 func socksLocal(addr, server string, shadow func(net.Conn) net.Conn) {
 	logf("SOCKS proxy %s <-> %s", addr, server)
@@ -128,23 +144,7 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 				return
 			}
 
-			dialer := &net.Dialer{
-				Timeout: 10 * time.Second,
-				Resolver: &net.Resolver{
-					PreferGo: true,
-					Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-						d := net.Dialer{
-							Timeout: time.Duration(2000) * time.Millisecond,
-						}
-
-						dnsTable := []string{"1.1.1.1:53", "1.0.0.1:53", "8.8.8.8:53", "8.8.4.4:53"}
-						dns := dnsTable[time.Now().Unix()%4]
-						return d.DialContext(ctx, "tcp", dns)
-					},
-				},
-			}
-
-			rc, err := dialer.Dial("tcp", tgt.String())
+			rc, err := tcpDialer.Dial("tcp", tgt.String())
 			if err != nil {
 				logf("failed to connect to target: %v", err)
 				return
