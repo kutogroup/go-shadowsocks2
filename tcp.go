@@ -137,7 +137,7 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 							Timeout: time.Duration(2000) * time.Millisecond,
 						}
 
-						dnsTable := []string{"1.1.1.1", "1.0.0.1", "8.8.8.8", "8.8.4.4"}
+						dnsTable := []string{"1.1.1.1:53", "1.0.0.1:53", "8.8.8.8:53", "8.8.4.4:53"}
 						dns := dnsTable[time.Now().Unix()%4]
 						return d.DialContext(ctx, dns, "tcp")
 					},
