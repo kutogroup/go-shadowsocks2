@@ -14,18 +14,17 @@ import (
 	"github.com/shadowsocks/go-shadowsocks2/socks"
 )
 
+var dnsDialer = net.Dialer{
+	Timeout: time.Duration(2000) * time.Millisecond,
+}
+
 var dialer = &net.Dialer{
 	Resolver: &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-			d := net.Dialer{
-				Timeout: time.Duration(2000) * time.Millisecond,
-			}
-
-			//dnsTable := []string{"1.1.1.1:53", "1.0.0.1:53", "8.8.8.8:53", "8.8.4.4:53"}
-			//dns := dnsTable[time.Now().Unix()%4]
-			dns := "9.9.9.9:53"
-			return d.DialContext(ctx, "tcp", dns)
+			dnsTable := []string{"1.1.1.1:53", "1.0.0.1:53", "8.8.8.8:53", "8.8.4.4:53"}
+			dns := dnsTable[time.Now().Unix()%4]
+			return dnsDialer.DialContext(ctx, "tcp", dns)
 		},
 	},
 }
