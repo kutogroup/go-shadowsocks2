@@ -129,7 +129,6 @@ func tcpRemote(addr string, shadow func(net.Conn) net.Conn) {
 			}
 
 			dialer := &net.Dialer{
-				Timeout: 10 * time.Second,
 				Resolver: &net.Resolver{
 					PreferGo: true,
 					Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
