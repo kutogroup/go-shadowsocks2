@@ -15,7 +15,7 @@ import (
 )
 
 var dnsDialer = net.Dialer{
-	Timeout: time.Duration(2000) * time.Millisecond,
+	Timeout: time.Second * 2,
 }
 
 var dialer = &net.Dialer{
